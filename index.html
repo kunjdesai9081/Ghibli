@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ghibli Style Image Generator</title>
+    <title>Ghibli Style Image Generator - Kunj Desai</title>
     <style>
         body {
             background-color: #121212;
@@ -51,6 +51,7 @@
 <body>
     <div class="container">
         <h1>Ghibli Style Image Generator</h1>
+        <p>Created by Kunj Desai</p>
         <input type="text" id="prompt" placeholder="Enter a scene description">
         <button onclick="generateImage()">Generate</button>
         <input type="file" id="upload" accept="image/*" onchange="previewImage(event)">
@@ -61,7 +62,11 @@
     <script>
         function generateImage() {
             let prompt = document.getElementById('prompt').value;
-            let imageUrl = `https://source.unsplash.com/600x400/?ghibli,anime,${encodeURIComponent(prompt)}`;
+            if (!prompt) {
+                alert('Please enter a description');
+                return;
+            }
+            let imageUrl = `https://dummyimage.com/600x400/000/fff&text=${encodeURIComponent(prompt)}`;
             
             document.getElementById('image-container').innerHTML = `<img id="generated-image" src="${imageUrl}" alt="Generated Ghibli Image">`;
             document.getElementById('download-btn').style.display = 'block';
@@ -81,6 +86,10 @@
 
         function downloadImage() {
             let img = document.getElementById('generated-image');
+            if (!img) {
+                alert('No image to download');
+                return;
+            }
             let link = document.createElement('a');
             link.href = img.src;
             link.download = 'ghibli_image.png';
