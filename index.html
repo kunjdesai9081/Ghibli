@@ -53,6 +53,7 @@
         <h1>Ghibli Style Image Converter</h1>
         <p>Created by Kunj Desai</p>
         <input type="file" id="upload" accept="image/*" onchange="uploadImage(event)">
+        <p id="auto-description"></p>
         <div id="image-container"></div>
         <button id="convert-btn" onclick="convertImage()" style="display: none;">Convert to Ghibli Style</button>
         <button id="download-btn" onclick="downloadImage()" style="display: none;">Download</button>
@@ -69,9 +70,22 @@
                     uploadedImage = e.target.result;
                     document.getElementById('image-container').innerHTML = `<img id="original-image" src="${uploadedImage}" alt="Uploaded Image">`;
                     document.getElementById('convert-btn').style.display = 'block';
+                    generateDescription();
                 };
                 reader.readAsDataURL(file);
             }
+        }
+        
+        function generateDescription() {
+            let descriptions = [
+                "A serene countryside with warm golden fields.",
+                "A mystical forest with soft glowing light.",
+                "A quiet town at sunset with a dreamy sky.",
+                "A whimsical floating island in the clouds.",
+                "A peaceful village with lush greenery and a river."
+            ];
+            let randomDesc = descriptions[Math.floor(Math.random() * descriptions.length)];
+            document.getElementById('auto-description').innerText = `Suggested Scene: ${randomDesc}`;
         }
 
         function convertImage() {
