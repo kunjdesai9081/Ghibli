@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghibli Style Image Generator</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: gold;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            background: #1e1e1e;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+        input {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+        }
+        button {
+            background: gold;
+            color: #121212;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #image-container {
+            margin-top: 20px;
+        }
+        img {
+            max-width: 100%;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ghibli Style Image Generator</h1>
+        <input type="text" id="prompt" placeholder="Enter a scene description">
+        <button onclick="generateImage()">Generate</button>
+        <div id="image-container"></div>
+    </div>
+
+    <script>
+        function generateImage() {
+            let prompt = document.getElementById('prompt').value;
+            let imageUrl = `https://source.unsplash.com/600x400/?ghibli,anime,${encodeURIComponent(prompt)}`;
+            
+            document.getElementById('image-container').innerHTML = `<img src="${imageUrl}" alt="Generated Ghibli Image">`;
+        }
+    </script>
+</body>
+</html>
