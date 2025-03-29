@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ghibli Style Image Generator - Kunj Desai</title>
+    <title>Ghibli Style Image Converter - Kunj Desai</title>
     <style>
         body {
             background-color: #121212;
@@ -50,38 +50,47 @@
 </head>
 <body>
     <div class="container">
-        <h1>Ghibli Style Image Generator</h1>
+        <h1>Ghibli Style Image Converter</h1>
         <p>Created by Kunj Desai</p>
-        <input type="text" id="prompt" placeholder="Enter a scene description">
-        <button onclick="generateImage()">Generate</button>
-        <input type="file" id="upload" accept="image/*" onchange="previewImage(event)">
+        <input type="file" id="upload" accept="image/*" onchange="uploadImage(event)">
         <div id="image-container"></div>
-        <button id="download-btn" onclick="downloadImage()">Download</button>
+        <button id="convert-btn" onclick="convertImage()" style="display: none;">Convert to Ghibli Style</button>
+        <button id="download-btn" onclick="downloadImage()" style="display: none;">Download</button>
     </div>
 
     <script>
-        function generateImage() {
-            let prompt = document.getElementById('prompt').value;
-            if (!prompt) {
-                alert('Please enter a description');
-                return;
-            }
-            let imageUrl = `https://dummyimage.com/600x400/000/fff&text=${encodeURIComponent(prompt)}`;
-            
-            document.getElementById('image-container').innerHTML = `<img id="generated-image" src="${imageUrl}" alt="Generated Ghibli Image">`;
-            document.getElementById('download-btn').style.display = 'block';
-        }
-
-        function previewImage(event) {
+        let uploadedImage = null;
+        
+        function uploadImage(event) {
             let file = event.target.files[0];
             if (file) {
                 let reader = new FileReader();
                 reader.onload = function(e) {
-                    document.getElementById('image-container').innerHTML = `<img id="generated-image" src="${e.target.result}" alt="Uploaded Image">`;
-                    document.getElementById('download-btn').style.display = 'block';
+                    uploadedImage = e.target.result;
+                    document.getElementById('image-container').innerHTML = `<img id="original-image" src="${uploadedImage}" alt="Uploaded Image">`;
+                    document.getElementById('convert-btn').style.display = 'block';
                 };
                 reader.readAsDataURL(file);
             }
+        }
+
+        function convertImage() {
+            if (!uploadedImage) {
+                alert('Please upload an image first');
+                return;
+            }
+            
+            fetch('http://localhost:5000/process', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({image: uploadedImage})
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('image-container').innerHTML = `<img id="generated-image" src="${data.processedImage}" alt="Ghibli Styled Image">`;
+                document.getElementById('download-btn').style.display = 'block';
+            })
+            .catch(error => console.error('Error:', error));
         }
 
         function downloadImage() {
@@ -92,7 +101,7 @@
             }
             let link = document.createElement('a');
             link.href = img.src;
-            link.download = 'ghibli_image.png';
+            link.download = 'ghibli_style_image.png';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
