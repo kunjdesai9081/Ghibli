@@ -3,112 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ghibli Style Image Filter</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/toxicity"></script>
+    <title>Ghibli Style Converter</title>
     <style>
-        body {
-            background-color: #121212;
-            color: gold;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            padding: 20px;
-            background: #1e1e1e;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-        }
-        input, button {
-            width: 80%;
-            padding: 10px;
-            margin: 10px 0;
-            border: none;
-            border-radius: 5px;
-        }
-        button {
-            background: gold;
-            color: #121212;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        #image-container {
-            margin-top: 20px;
-        }
-        img {
-            max-width: 100%;
-            border-radius: 10px;
-            display: block;
-            margin: auto;
-        }
-        #download-btn {
-            display: none;
-            margin-top: 10px;
-        }
+        body { font-family: Arial, sans-serif; text-align: center; background: #222; color: #fff; }
+        #preview { max-width: 100%; margin-top: 20px; }
+        .container { padding: 20px; }
+        button { margin-top: 10px; padding: 10px; background: gold; border: none; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Ghibli Style Image Filter</h1>
-        <p>Created by Kunj Desai</p>
-        <input type="file" id="upload" accept="image/*" onchange="applyFilter(event)">
-        <div id="image-container"></div>
-        <button id="download-btn" onclick="downloadImage()" style="display: none;">Download</button>
+        <h1>Ghibli Style Image Converter</h1>
+        <input type="file" id="imageUpload" accept="image/*">
+        <br>
+        <img id="preview" src="" alt="Image Preview">
+        <br>
+        <button id="convert">Convert to Ghibli Style</button>
+        <br>
+        <img id="converted" src="" alt="Converted Image" style="display: none;">
+        <br>
+        <a id="download" style="display: none;" download="ghibli-style.png">
+            <button>Download</button>
+        </a>
     </div>
 
     <script>
-        async function applyFilter(event) {
-            let file = event.target.files[0];
+        document.getElementById('imageUpload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
             if (file) {
-                let reader = new FileReader();
-                reader.onload = async function(e) {
-                    let img = new Image();
-                    img.src = e.target.result;
-                    img.onload = async function() {
-                        let canvas = document.createElement('canvas');
-                        let ctx = canvas.getContext('2d');
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        ctx.drawImage(img, 0, 0);
-
-                        // Load AI model and process the image
-                        const model = await tf.loadLayersModel('https://example.com/animegan_model.json');
-                        let tensor = tf.browser.fromPixels(canvas).toFloat().div(tf.scalar(255)).expandDims(0);
-                        let output = model.predict(tensor);
-                        let outputData = await tf.browser.toPixels(output.squeeze());
-                        let newCanvas = document.createElement('canvas');
-                        newCanvas.width = img.width;
-                        newCanvas.height = img.height;
-                        let newCtx = newCanvas.getContext('2d');
-                        let imageData = newCtx.createImageData(img.width, img.height);
-                        imageData.data.set(outputData);
-                        newCtx.putImageData(imageData, 0, 0);
-
-                        let filteredImage = newCanvas.toDataURL("image/png");
-                        document.getElementById('image-container').innerHTML = `<img id="filtered-image" src="${filteredImage}">`;
-                        document.getElementById('download-btn').style.display = 'block';
-                    };
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('preview').src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             }
-        }
+        });
 
-        function downloadImage() {
-            let img = document.getElementById('filtered-image');
-            if (!img) {
-                alert('No image to download');
-                return;
+        document.getElementById('convert').addEventListener('click', async function() {
+            const imageUrl = document.getElementById('preview').src;
+            if (!imageUrl) return alert("Please upload an image first");
+            
+            // Call API (Example with Replicate API)
+            const response = await fetch('https://api.replicate.com/v1/predictions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Token YOUR_REPLICATE_API_KEY',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    version: "ghibli-style-model-id",
+                    input: { image: imageUrl }
+                })
+            });
+            const result = await response.json();
+            
+            if (result && result.output) {
+                document.getElementById('converted').src = result.output;
+                document.getElementById('converted').style.display = 'block';
+                document.getElementById('download').href = result.output;
+                document.getElementById('download').style.display = 'block';
             }
-            let link = document.createElement('a');
-            link.href = img.src;
-            link.download = 'ghibli_style_image.png';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
+        });
     </script>
 </body>
 </html>
