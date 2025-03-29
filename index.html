@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ghibli Style Image Converter - Kunj Desai</title>
+    <title>Ghibli Style Image Filter</title>
     <style>
         body {
             background-color: #121212;
@@ -50,65 +50,49 @@
 </head>
 <body>
     <div class="container">
-        <h1>Ghibli Style Image Converter</h1>
+        <h1>Ghibli Style Image Filter</h1>
         <p>Created by Kunj Desai</p>
-        <input type="file" id="upload" accept="image/*" onchange="uploadImage(event)">
-        <p id="auto-description"></p>
+        <input type="file" id="upload" accept="image/*" onchange="applyFilter(event)">
         <div id="image-container"></div>
-        <button id="convert-btn" onclick="convertImage()" style="display: none;">Convert to Ghibli Style</button>
         <button id="download-btn" onclick="downloadImage()" style="display: none;">Download</button>
     </div>
 
     <script>
-        let uploadedImage = null;
-        
-        function uploadImage(event) {
+        function applyFilter(event) {
             let file = event.target.files[0];
             if (file) {
                 let reader = new FileReader();
                 reader.onload = function(e) {
-                    uploadedImage = e.target.result;
-                    document.getElementById('image-container').innerHTML = `<img id="original-image" src="${uploadedImage}" alt="Uploaded Image">`;
-                    document.getElementById('convert-btn').style.display = 'block';
-                    generateDescription();
+                    let img = new Image();
+                    img.src = e.target.result;
+                    img.onload = function() {
+                        let canvas = document.createElement('canvas');
+                        let ctx = canvas.getContext('2d');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
+
+                        // Apply Ghibli-style filter (adjust brightness, contrast, and colors)
+                        let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        let data = imageData.data;
+                        for (let i = 0; i < data.length; i += 4) {
+                            data[i] = data[i] * 1.1;  // Increase red
+                            data[i + 1] = data[i + 1] * 1.05;  // Adjust green
+                            data[i + 2] = data[i + 2] * 0.9;  // Reduce blue for warm tones
+                        }
+                        ctx.putImageData(imageData, 0, 0);
+
+                        let filteredImage = canvas.toDataURL("image/png");
+                        document.getElementById('image-container').innerHTML = `<img id="filtered-image" src="${filteredImage}">`;
+                        document.getElementById('download-btn').style.display = 'block';
+                    };
                 };
                 reader.readAsDataURL(file);
             }
         }
-        
-        function generateDescription() {
-            let descriptions = [
-                "A serene countryside with warm golden fields.",
-                "A mystical forest with soft glowing light.",
-                "A quiet town at sunset with a dreamy sky.",
-                "A whimsical floating island in the clouds.",
-                "A peaceful village with lush greenery and a river."
-            ];
-            let randomDesc = descriptions[Math.floor(Math.random() * descriptions.length)];
-            document.getElementById('auto-description').innerText = `Suggested Scene: ${randomDesc}`;
-        }
-
-        function convertImage() {
-            if (!uploadedImage) {
-                alert('Please upload an image first');
-                return;
-            }
-            
-            fetch('http://localhost:5000/process', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({image: uploadedImage})
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('image-container').innerHTML = `<img id="generated-image" src="${data.processedImage}" alt="Ghibli Styled Image">`;
-                document.getElementById('download-btn').style.display = 'block';
-            })
-            .catch(error => console.error('Error:', error));
-        }
 
         function downloadImage() {
-            let img = document.getElementById('generated-image');
+            let img = document.getElementById('filtered-image');
             if (!img) {
                 alert('No image to download');
                 return;
