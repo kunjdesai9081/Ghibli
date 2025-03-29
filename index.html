@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ghibli Style Image Filter</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/toxicity"></script>
     <style>
         body {
             background-color: #121212;
@@ -58,31 +60,34 @@
     </div>
 
     <script>
-        function applyFilter(event) {
+        async function applyFilter(event) {
             let file = event.target.files[0];
             if (file) {
                 let reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = async function(e) {
                     let img = new Image();
                     img.src = e.target.result;
-                    img.onload = function() {
+                    img.onload = async function() {
                         let canvas = document.createElement('canvas');
                         let ctx = canvas.getContext('2d');
                         canvas.width = img.width;
                         canvas.height = img.height;
                         ctx.drawImage(img, 0, 0);
 
-                        // Apply Ghibli-style filter (adjust brightness, contrast, and colors)
-                        let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                        let data = imageData.data;
-                        for (let i = 0; i < data.length; i += 4) {
-                            data[i] = data[i] * 1.1;  // Increase red
-                            data[i + 1] = data[i + 1] * 1.05;  // Adjust green
-                            data[i + 2] = data[i + 2] * 0.9;  // Reduce blue for warm tones
-                        }
-                        ctx.putImageData(imageData, 0, 0);
+                        // Load AI model and process the image
+                        const model = await tf.loadLayersModel('https://example.com/animegan_model.json');
+                        let tensor = tf.browser.fromPixels(canvas).toFloat().div(tf.scalar(255)).expandDims(0);
+                        let output = model.predict(tensor);
+                        let outputData = await tf.browser.toPixels(output.squeeze());
+                        let newCanvas = document.createElement('canvas');
+                        newCanvas.width = img.width;
+                        newCanvas.height = img.height;
+                        let newCtx = newCanvas.getContext('2d');
+                        let imageData = newCtx.createImageData(img.width, img.height);
+                        imageData.data.set(outputData);
+                        newCtx.putImageData(imageData, 0, 0);
 
-                        let filteredImage = canvas.toDataURL("image/png");
+                        let filteredImage = newCanvas.toDataURL("image/png");
                         document.getElementById('image-container').innerHTML = `<img id="filtered-image" src="${filteredImage}">`;
                         document.getElementById('download-btn').style.display = 'block';
                     };
